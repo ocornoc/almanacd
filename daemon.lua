@@ -118,9 +118,17 @@ api.download_key = function(inp)
 	local key = file:read("*a")
 	file:close()
 	
+	local status, err = pcall(function() key = bibcrypt.deconstruct.authregister(key, aeskey, aesnonce) end)
 	
-	
-	return {result = key}
+	if status then
+		return {result = key}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
 end
 
 api.generate_aes_key = function()
