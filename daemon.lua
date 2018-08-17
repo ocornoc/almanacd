@@ -34,7 +34,7 @@ api.status = function()
 			version = bibver,
 			running = true,
 			time    = os.time(),
-			uptime  = os.clock(),
+			uptime  = os.clock() * 60,
 		}
 	}
 end
