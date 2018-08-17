@@ -1,0 +1,6 @@
+[submodule "luabry"]
+	path = luabry
+	url = https://github.com/ocornoc/luabry
+[submodule "luajrpc"]
+	path = luajrpc
+	url = https://github.com/ocornoc/luajrpc
