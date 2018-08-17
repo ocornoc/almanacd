@@ -132,7 +132,7 @@ api.download_key = function(inp)
 end
 
 api.generate_aes_key = function()
-	return bibcrypt.construct.aeskey()
+	return {result = bibcrypt.construct.aeskey()}
 end
 
 --[[
