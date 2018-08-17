@@ -11,7 +11,7 @@ bibcrypt.verify = {}
 
 ---- Object Construction --------------------------------------
 function bibcrypt.construct.aeskey()
-	
+	return salut.random.string(32)
 end
 
 function bibcrypt.construct.authregister(pubkey, aeskey, aesnonce)
