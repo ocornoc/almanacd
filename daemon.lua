@@ -40,16 +40,16 @@ api.status = function()
 end
 
 api.download_key = function(inp)
-	if type(inp.aeskey) ~= "string" then
+	if type(inp.encryption_key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'aeskey' field must be a string",
+				message = "Invalid parameter: 'encryption_key' field must be a string",
 			}
 		}
-	elseif type(inp.nonce) ~= "string" then
+	elseif type(inp.encryption_nonce) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'aesnonce' field must be a string",
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
 			}
 		}
 	elseif type(inp.uri) ~= "string" then
@@ -118,7 +118,7 @@ api.download_key = function(inp)
 	local key = file:read("*a")
 	file:close()
 	
-	local status, err = pcall(function() key = bibcrypt.deconstruct.authregister(key, aeskey, aesnonce) end)
+	local status, err = pcall(function() key = bibcrypt.deconstruct.authregister(key, inp.encryption_key, inp.encryption_nonce) end)
 	
 	if status then
 		return {result = key}
