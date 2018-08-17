@@ -135,35 +135,27 @@ api.generate_aes_key = function()
 	return {result = bibcrypt.construct.aeskey()}
 end
 
---[[
 api.upload_key = function(inp)
 	if type(inp.key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'key' field must be a Base64 string",
+				message = "Invalid parameter: 'key' field must be a string",
 			}
 		}
-	elseif not isvalid.base64(inp.key) then
+	elseif type(inp.encryption_key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Malformed parameter: 'key' field is not a valid Base64 string",
+				message = "Invalid parameter: 'encryption_key' field must be a string",
 			}
 		}
-	elseif type(inp.bid) ~= "number" then
+	elseif type(inp.encryption_nonce) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'bid' field must be a number",
-			}
-		}
-	elseif inp.bid < 0 then
-		return {error = {
-				code = -32602,
-				message = "Malformed parameter: 'bid' field is not non-negative",
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
 			}
 		}
 	end
 end
-]]
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
