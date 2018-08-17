@@ -167,7 +167,8 @@ end
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
-	local status = pcall(function() json.decode(json_inp) end)
+	local inp
+	local status = pcall(function() inp = json.decode(json_inp) end)
 	
 	if not status then
 		return json.encode{error = {
@@ -177,7 +178,6 @@ local function json_interface(json_inp)
 		}
 	end
 	
-	local inp = json.decode(json_inp)
 	log:write("[ " .. os.time() .. " ]\tDecoded input\n")
 	
 	if not (jrpc.validate_request(inp) or jrpc.validate_batch_request(inp))  then
@@ -196,7 +196,7 @@ local function json_interface(json_inp)
 		end
 	end
 	
-	if not api[inp.method:lower()] then
+	if not (inp.method and api[inp.method:lower()]) then
 		if jrpc.validate_batch_request(inp) then
 			local resp_table = {}
 			
