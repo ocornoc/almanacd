@@ -99,7 +99,7 @@ function salut.random.string(length)
 	end
 	
 	local newstring = ffi.new("unsigned char[?]", length)
-	sodium.randombytes_buf(newstring, ffi.new("const size_t", length))
+	sodium.randombytes_buf(newstring, length)
 	
 	return ffi.string(newstring, length)
 end
