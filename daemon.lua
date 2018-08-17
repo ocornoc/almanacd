@@ -1,5 +1,6 @@
 ---- Dependencies ---------------------------------------------
 -- LuaJIT
+package.path = package.path .. ";./lib/?.lua"
 local lbry = require "luabry.lbry"
 local jrpc = require "luajrpc.jrpc"
 local socket = require "socket"
@@ -7,7 +8,6 @@ local json = require "cjson"
 local http = require "socket.http"
 local ltn12 = require "ltn12"
 local ffi = require "ffi"
-local mime = require "mime"
 
 ---- Daemon Details -------------------------------------------
 -- Bind IP
@@ -17,7 +17,7 @@ local bind_ip = "*"
 local bind_port = 5280
 
 ---- Version --------------------------------------------------
-local bibver = 20180716
+local bibver = 20180816
 
 ---- State ----------------------------------------------------
 local api = {}
