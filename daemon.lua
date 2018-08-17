@@ -268,8 +268,8 @@ while true do
 				if tab and tab ~= "" then
 					local newtab = mime.normalize()(tab .. "\n")
 					client:send("HTTP/1.1 200 OK\r\nContent-Length: " .. newtab:len() .. "\r\nContent-Type: application/json-rpc\r\n\r\n" .. newtab)
-				else
 					
+					socket.sleep(0.0001)
 				end
 			end
 			
