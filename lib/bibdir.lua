@@ -12,4 +12,6 @@ files.key_file_path = files.key_folder_path .. "/keyfile"
 
 lfs.mkdir("./logs")
 files.logs_folder_path = files.main_folder_path .. "/logs"
-files.log_file_path = files.logs_folder_path .. "/" .. os.date("!%t")
+files.log_file_path = files.logs_folder_path .. "/bibliolog.txt"
+
+return files
