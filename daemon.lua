@@ -1,6 +1,6 @@
 ---- Dependencies ---------------------------------------------
 -- LuaJIT
-package.path = package.path .. ";./lib/?.lua"
+package.path = package.path .. ";./lib/?.lua;~/.bibliosoph/?.lua;~/.bibliosoph/lib/?.lua"
 local lbry = require "luabry.lbry"
 local jrpc = require "luajrpc.jrpc"
 local socket = require "socket"
@@ -21,8 +21,10 @@ local bibver = 20180817
 
 ---- State ----------------------------------------------------
 local api = {}
+local files = require "lib.bibdir"
 local bibcrypt = require "lib.bibcrypt"
-local log = assert(io.open("biblio.log", "w+"))
+local log = assert(io.open(files.log_file_path, "w+"))
+local current_keys = {}
 
 ---- API Functions --------------------------------------------
 api.version = function()
