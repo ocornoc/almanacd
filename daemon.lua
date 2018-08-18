@@ -251,7 +251,7 @@ api.upload_key = function(inp)
 	temp_key_file:flush()
 	temp_key_file
 	
-	local response, request = {}, lbry.publish({uri = inp.uri})
+	local response, request = {}, lbry.publish({uri = })
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
 	response = table.concat(response)
@@ -265,6 +265,8 @@ api.upload_key = function(inp)
 	end
 	
 	response = json.decode(response)
+
+
 end
 
 ---- Public Interface -----------------------------------------
