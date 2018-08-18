@@ -41,6 +41,77 @@ api.status = function()
 	}
 end
 
+api.encrypt_keys = function(inp)
+	if type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	end
+	
+	local keyfiledata
+	local status, err = pcall(function() keyfiledata = bibcrypt.construct.keyfiledata(current_keys, inp.encryption_key, inp.encryption_nonce) end)
+	
+	if status then
+		if inp.flush_to_key_file then
+			local keyfile = io.open(files.key_file_path, "w+b")
+			keyfile:write(keyfiledata)
+			keyfile:flush()
+			keyfile:close()
+		end
+		
+		return {result = keyfiledata}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
+api.decrypt_keys = function(inp)
+	if type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	end
+	
+	local keyfiledata
+	local keyfile = io.open(files.key_file_path, "a+b")
+	local status, err = pcall(function() keyfiledata = bibcrypt.deconstruct.keyfiledata(keyfile:read("*a"), inp.encryption_key, inp.encryption_nonce) end)
+	keyfile:close()
+	
+	if status then
+		if inp.flush_to_internal_table then
+			current_keys = keyfiledata
+		end
+		
+		return {result = keyfiledata}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
 api.download_key = function(inp)
 	if type(inp.encryption_key) ~= "string" then
 		return {error = {
@@ -133,8 +204,14 @@ api.download_key = function(inp)
 	end
 end
 
-api.generate_aes_key = function()
-	return {result = bibcrypt.construct.aeskey()}
+api.generate_aes_key = function(inp)
+	local key = bibcrypt.construct.aeskey()
+	
+	if inp.flush_to_internal_table then
+		current_keys[#current_keys + 1] = key
+	end
+	
+	return {result = key}
 end
 
 api.upload_key = function(inp)
