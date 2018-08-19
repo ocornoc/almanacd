@@ -62,11 +62,29 @@ function bibcrypt.construct.message(message, message_nonce, last_message_nonce, 
 	return ciphertext
 end
 
+function bibcrypt.construct.keyfiledata(keys, aeskey, aesnonce)
+	assert(type(keys) == "table", "'keys' field must be a table (was a " .. type(keys) .. ")")
+	assert(type(aeskey) == "string", "'aeskey' field must be a string (was a " .. type(aeskey) .. ")")
+	assert(type(aesnonce) == "string", "'aesnonce' field must be a string (was a " .. type(aesnonce) .. ")")
+	
+	local aeskey_hash, err = salut.hash.sha512_256(aeskey)
+	
+	assert(err == nil or err == 0, "AES key hashing failed")
+	
+	local canonical_aesnonce = salut.pad.zero(aesnonce:sub(1, 12), 12)
+	local ciphertext, err = salut.encrypt.aes256gcm(json.encode(keys), aeskey_hash, canonical_aesnonce, "keyfile")
+	
+	assert(err == nil or err == 0, "encryption failed")
+	
+	return ciphertext
+end
+
 ---- Object Deconstruction ------------------------------------
 function bibcrypt.deconstruct.authregister(authreg, aeskey, aesnonce)
 	assert(type(authreg) == "string", "'authreg' field must be a string (was a " .. type(authreg) .. ")")
 	assert(type(aeskey) == "string", "'aeskey' field must be a string (was a " .. type(aeskey) .. ")")
 	assert(type(aesnonce) == "string", "'aesnonce' field must be a string (was a " .. type(aesnonce) .. ")")
+	
 	local aeskey_hash, err = salut.hash.sha512_256(aeskey)
 	
 	assert(err == nil or err == 0, "AES key hashing failed")
@@ -83,12 +101,30 @@ function bibcrypt.deconstruct.message(message, aeskey, aesnonce)
 	assert(type(message) == "string", "'message' field must be a string (was a " .. type(message) .. ")")
 	assert(type(aeskey) == "string", "'aeskey' field must be a string (was a " .. type(aeskey) .. ")")
 	assert(type(aesnonce) == "string", "'aesnonce' field must be a string (was a " .. type(aesnonce) .. ")")
+	
 	local aeskey_hash, err = salut.hash.sha512_256(aeskey)
 	
 	assert(err == nil or err == 0, "AES key hashing failed")
 	
 	local canonical_aesnonce = salut.pad.zero(aesnonce:sub(1, 12), 12)
 	local data, err = salut.decrypt.aes256gcm(message, aeskey_hash, canonical_aesnonce, "bibliosoph01")
+	
+	assert(err == nil or err == 0, "decryption failed")
+	
+	return json.decode(data)
+end
+
+function bibcrypt.deconstruct.keyfiledata(keydata, aeskey, aesnonce)
+	assert(type(keydata) == "string", "'keydata' field must be a string (was a " .. type(keydata) .. ")")
+	assert(type(aeskey) == "string", "'aeskey' field must be a string (was a " .. type(aeskey) .. ")")
+	assert(type(aesnonce) == "string", "'aesnonce' field must be a string (was a " .. type(aesnonce) .. ")")
+	
+	local aeskey_hash, err = salut.hash.sha512_256(aeskey)
+	
+	assert(err == nil or err == 0, "AES key hashing failed")
+	
+	local canonical_aesnonce = salut.pad.zero(aesnonce:sub(1, 12), 12)
+	local data, err = salut.decrypt.aes256gcm(keydata, aeskey_hash, canonical_aesnonce, "keyfile")
 	
 	assert(err == nil or err == 0, "decryption failed")
 	

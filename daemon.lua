@@ -1,6 +1,6 @@
 ---- Dependencies ---------------------------------------------
 -- LuaJIT
-package.path = package.path .. ";./lib/?.lua"
+package.path = package.path .. ";./lib/?.lua;~/.bibliosoph/?.lua;~/.bibliosoph/lib/?.lua"
 local lbry = require "luabry.lbry"
 local jrpc = require "luajrpc.jrpc"
 local socket = require "socket"
@@ -17,12 +17,14 @@ local bind_ip = "*"
 local bind_port = 5280
 
 ---- Version --------------------------------------------------
-local bibver = 20180816
+local bibver = 20180817
 
 ---- State ----------------------------------------------------
 local api = {}
+local files = require "lib.bibdir"
 local bibcrypt = require "lib.bibcrypt"
-local log = assert(io.open("biblio.log", "w+"))
+local log = assert(io.open(files.log_file_path, "w+"))
+local current_keys = {}
 
 ---- API Functions --------------------------------------------
 api.version = function()
@@ -39,17 +41,88 @@ api.status = function()
 	}
 end
 
-api.download_key = function(inp)
-	if type(inp.aeskey) ~= "string" then
+api.encrypt_keys = function(inp)
+	if type(inp.encryption_key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'aeskey' field must be a string",
+				message = "Invalid parameter: 'encryption_key' field must be a string",
 			}
 		}
-	elseif type(inp.nonce) ~= "string" then
+	elseif type(inp.encryption_nonce) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'aesnonce' field must be a string",
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	end
+	
+	local keyfiledata
+	local status, err = pcall(function() keyfiledata = bibcrypt.construct.keyfiledata(current_keys, inp.encryption_key, inp.encryption_nonce) end)
+	
+	if status then
+		if inp.flush_to_key_file then
+			local keyfile = io.open(files.key_file_path, "w+b")
+			keyfile:write(keyfiledata)
+			keyfile:flush()
+			keyfile:close()
+		end
+		
+		return {result = keyfiledata}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
+api.decrypt_keys = function(inp)
+	if type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	end
+	
+	local keyfiledata
+	local keyfile = io.open(files.key_file_path, "a+b")
+	local status, err = pcall(function() keyfiledata = bibcrypt.deconstruct.keyfiledata(keyfile:read("*a"), inp.encryption_key, inp.encryption_nonce) end)
+	keyfile:close()
+	
+	if status then
+		if inp.flush_to_internal_table then
+			current_keys = keyfiledata
+		end
+		
+		return {result = keyfiledata}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
+api.download_key = function(inp)
+	if type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
 			}
 		}
 	elseif type(inp.uri) ~= "string" then
@@ -118,7 +191,7 @@ api.download_key = function(inp)
 	local key = file:read("*a")
 	file:close()
 	
-	local status, err = pcall(function() key = bibcrypt.deconstruct.authregister(key, aeskey, aesnonce) end)
+	local status, err = pcall(function() key = bibcrypt.deconstruct.authregister(key, inp.encryption_key, inp.encryption_nonce) end)
 	
 	if status then
 		return {result = key}
@@ -131,39 +204,70 @@ api.download_key = function(inp)
 	end
 end
 
-api.generate_aes_key = function()
-	return {result = bibcrypt.construct.aeskey()}
+api.generate_aes_key = function(inp)
+	local key = bibcrypt.construct.aeskey()
+	
+	if inp.flush_to_internal_table then
+		current_keys[#current_keys + 1] = key
+	end
+	
+	return {result = key}
 end
 
---[[
 api.upload_key = function(inp)
 	if type(inp.key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'key' field must be a Base64 string",
+				message = "Invalid parameter: 'key' field must be a string",
 			}
 		}
-	elseif not isvalid.base64(inp.key) then
+	elseif type(inp.encryption_key) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Malformed parameter: 'key' field is not a valid Base64 string",
+				message = "Invalid parameter: 'encryption_key' field must be a string",
 			}
 		}
-	elseif type(inp.bid) ~= "number" then
+	elseif type(inp.encryption_nonce) ~= "string" then
 		return {error = {
 				code    = -32602,
-				message = "Invalid parameter: 'bid' field must be a number",
-			}
-		}
-	elseif inp.bid < 0 then
-		return {error = {
-				code = -32602,
-				message = "Malformed parameter: 'bid' field is not non-negative",
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
 			}
 		}
 	end
+	
+	local key
+	local status, err = pcall(function() key = bibcrypt.construct.authregister(inp.key, inp.encryption_key, inp.encryption_nonce) end)
+	
+	if not status then
+		return {error = {
+				code    = -32602,
+				message = err
+			}
+		}
+	end
+	
+	local temp_key_file = io.tmpfile()
+	temp_key_file:write(key)
+	temp_key_file:flush()
+	temp_key_file
+	
+	local response, request = {}, lbry.publish({uri = })
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+	response = table.concat(response)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRY daemon returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
+	response = json.decode(response)
+
+
 end
-]]
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
