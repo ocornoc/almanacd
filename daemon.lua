@@ -263,8 +263,6 @@ api.upload_key = function(inp)
 		}
 	end
 	
-<<<<<<< HEAD
-<<<<<<< HEAD
 	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
 	temp_key_file:write(key)
 	temp_key_file:flush()
@@ -294,11 +292,11 @@ api.upload_key = function(inp)
 		return {error = {
 				code    = -32601,
 				message = "LBRYd failed to produce anything intelligible (aka json)",
-=======
-	local temp_key_file = io.tmpfile()
-=======
+			}
+		}
+	end
+	
 	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
->>>>>>> Actually fixed bibdir.lua, attempting to finish upload_key
 	temp_key_file:write(key)
 	temp_key_file:flush()
 	temp_key_file:close()
@@ -317,31 +315,13 @@ api.upload_key = function(inp)
 		return {error = {
 				code    = -32601,
 				message = "LBRY daemon returned nil, make sure it's running and responsive",
->>>>>>> syncing
 			}
 		}
 	end
 	
-<<<<<<< HEAD
 	return json.decode(response)
-=======
-	response = json.decode(response)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> syncing
-=======
-
-
->>>>>>> sync
-=======
-	
-	return response
->>>>>>> Actually fixed bibdir.lua, attempting to finish upload_key
 end
 
-<<<<<<< HEAD
-
-=======
 -- This is basically just a glorified 'ping' command.
 api.get_lbryd_status = function(inp)
 	if type(inp.timeout) ~= "nil" and type(inp.timeout) ~= "number" then
@@ -370,7 +350,6 @@ api.get_lbryd_status = function(inp)
 	
 	return response
 end
->>>>>>> Added glorified LBRY ping
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
