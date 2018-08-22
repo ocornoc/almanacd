@@ -17,7 +17,7 @@ local bind_ip = "*"
 local bind_port = 5280
 
 ---- Version --------------------------------------------------
-local bibver = 20180817
+local bibver = 20180822
 
 ---- State ----------------------------------------------------
 local api = {}
@@ -296,10 +296,60 @@ api.upload_key = function(inp)
 		}
 	end
 	
+	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
+	temp_key_file:write(key)
+	temp_key_file:flush()
+	temp_key_file:close()
+	
+	inp.encryption_key = nil
+	inp.encryption_nonce = nil
+	
+	inp.content = files.scratchpad_file_path
+	
+	local response, request = {}, lbry.publish(inp)
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+	response = table.concat(response)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRY daemon returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
 	return json.decode(response)
 end
 
-
+-- This is basically just a glorified 'ping' command.
+api.get_lbryd_status = function(inp)
+	if type(inp.timeout) ~= "nil" and type(inp.timeout) ~= "number" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'timeout' field must be unspecified or a number",
+			}
+		}
+	end
+	
+	local response, request = {}, lbry.status()
+	request.sink = ltn12.sink.table(response)
+	request.headers.TIMEOUT = inp.timeout
+	http.request(request)
+	response = table.concat(response)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRY daemon returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
+	response = json.decode(response)
+	
+	return response
+end
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
