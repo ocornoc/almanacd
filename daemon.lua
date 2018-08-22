@@ -141,7 +141,7 @@ api.download_key = function(inp)
 	if response == "" then
 		return {error = {
 				code    = -32601,
-				message = "LBRY daemon returned nil, make sure it's running and responsive",
+				message = "LBRYd returned nil, make sure it's running and responsive",
 			}
 		}
 	end
@@ -276,21 +276,22 @@ api.upload_key = function(inp)
 	local response, request = {}, lbry.publish(inp)
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
+	response = table.concat(response)
+
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd returned nil, make sure it's running and responsive",
+			}
+		}
+	end
 	
-	status = pcall(function() response = json.decode(table.concat(response)) end)
+	status = pcall(function() response = json.decode(response) end)
 	
 	if not status then
 		return {error = {
 				code    = -32601,
 				message = "LBRYd failed to produce anything intelligible (aka json)",
-			}
-		}
-	end
-	
-	if response == "" then
-		return {error = {
-				code    = -32601,
-				message = "LBRY daemon returned nil, make sure it's running and responsive",
 			}
 		}
 	end
