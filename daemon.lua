@@ -269,9 +269,7 @@ api.upload_key = function(inp)
 		}
 	end
 	
-	response = json.decode(response)
-	
-	return response
+	return json.decode(response)
 end
 
 ---- Public Interface -----------------------------------------
