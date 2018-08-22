@@ -146,7 +146,15 @@ api.download_key = function(inp)
 		}
 	end
 	
-	response = json.decode(response)
+	local status = pcall(function() response = json.decode(response) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
 	
 	-- Check if the URI is resolvable.
 	if response.error then
@@ -169,7 +177,16 @@ api.download_key = function(inp)
 	response, request = {}, lbry.get({uri = inp.uri})
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
-	response = json.decode(table.concat(response))
+	
+	status = pcall(function() response = json.decode(table.concat(response)) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
 	
 	-- Return error if there was one.
 	if response.error then
@@ -259,7 +276,16 @@ api.upload_key = function(inp)
 	local response, request = {}, lbry.publish(inp)
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
-	response = table.concat(response)
+	
+	status = pcall(function() response = json.decode(table.concat(response)) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
 	
 	if response == "" then
 		return {error = {
@@ -269,10 +295,10 @@ api.upload_key = function(inp)
 		}
 	end
 	
-	response = json.decode(response)
-	
-	return response
+	return json.decode(response)
 end
+
+
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
