@@ -4,7 +4,7 @@ package.path = package.path .. ";./lib/?.lua;~/.bibliosoph/?.lua;~/.bibliosoph/l
 local lbry = require "luabry.lbry"
 local jrpc = require "luajrpc.jrpc"
 local socket = require "socket"
-local json = require "cjson"
+local json = require "json"
 local http = require "socket.http"
 local ltn12 = require "ltn12"
 local ffi = require "ffi"
@@ -246,12 +246,17 @@ api.upload_key = function(inp)
 		}
 	end
 	
-	local temp_key_file = io.tmpfile()
+	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
 	temp_key_file:write(key)
 	temp_key_file:flush()
-	temp_key_file
+	temp_key_file:close()
 	
-	local response, request = {}, lbry.publish({uri = })
+	inp.encryption_key = nil
+	inp.encryption_nonce = nil
+	
+	inp.content = files.scratchpad_file_path
+	
+	local response, request = {}, lbry.publish(inp)
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
 	response = table.concat(response)
@@ -265,8 +270,8 @@ api.upload_key = function(inp)
 	end
 	
 	response = json.decode(response)
-
-
+	
+	return response
 end
 
 ---- Public Interface -----------------------------------------
