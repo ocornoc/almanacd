@@ -315,15 +315,25 @@ api.get_lbryd_status = function(inp)
 	http.request(request)
 	response = table.concat(response)
 	
+	response = table.concat(response)
+
 	if response == "" then
 		return {error = {
 				code    = -32601,
-				message = "LBRY daemon returned nil, make sure it's running and responsive",
+				message = "LBRYd returned nil, make sure it's running and responsive",
 			}
 		}
 	end
 	
-	response = json.decode(response)
+	status = pcall(function() response = json.decode(response) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
 	
 	return response
 end
