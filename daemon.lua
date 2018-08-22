@@ -263,6 +263,7 @@ api.upload_key = function(inp)
 		}
 	end
 	
+<<<<<<< HEAD
 	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
 	temp_key_file:write(key)
 	temp_key_file:flush()
@@ -292,11 +293,31 @@ api.upload_key = function(inp)
 		return {error = {
 				code    = -32601,
 				message = "LBRYd failed to produce anything intelligible (aka json)",
+=======
+	local temp_key_file = io.tmpfile()
+	temp_key_file:write(key)
+	temp_key_file:flush()
+	temp_key_file
+	
+	local response, request = {}, lbry.publish({uri = inp.uri})
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+	response = table.concat(response)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRY daemon returned nil, make sure it's running and responsive",
+>>>>>>> syncing
 			}
 		}
 	end
 	
+<<<<<<< HEAD
 	return json.decode(response)
+=======
+	response = json.decode(response)
+>>>>>>> syncing
 end
 
 
