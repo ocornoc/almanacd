@@ -17,7 +17,7 @@ local bind_ip = "*"
 local bind_port = 5280
 
 ---- Version --------------------------------------------------
-local bibver = 20180817
+local bibver = 20180822
 
 ---- State ----------------------------------------------------
 local api = {}
@@ -339,7 +339,38 @@ api.upload_key = function(inp)
 >>>>>>> Actually fixed bibdir.lua, attempting to finish upload_key
 end
 
+<<<<<<< HEAD
 
+=======
+-- This is basically just a glorified 'ping' command.
+api.get_lbryd_status = function(inp)
+	if type(inp.timeout) ~= "nil" and type(inp.timeout) ~= "number" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'timeout' field must be unspecified or a number",
+			}
+		}
+	end
+	
+	local response, request = {}, lbry.status()
+	request.sink = ltn12.sink.table(response)
+	request.headers.TIMEOUT = inp.timeout
+	http.request(request)
+	response = table.concat(response)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRY daemon returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
+	response = json.decode(response)
+	
+	return response
+end
+>>>>>>> Added glorified LBRY ping
 
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
