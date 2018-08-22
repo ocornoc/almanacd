@@ -296,7 +296,7 @@ api.upload_key = function(inp)
 		}
 	end
 	
-	return json.decode(response)
+	return response
 end
 
 -- This is basically just a glorified 'ping' command.
