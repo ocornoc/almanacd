@@ -136,7 +136,6 @@ api.download_key = function(inp)
 	local response, request = {}, lbry.stream_cost_estimate({uri = inp.uri})
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
-	response = table.concat(response)
 	
 	if response == "" then
 		return {error = {
@@ -146,7 +145,7 @@ api.download_key = function(inp)
 		}
 	end
 	
-	local status = pcall(function() response = json.decode(response) end)
+	local status = pcall(function() response = json.decode(table.concat(response)) end)
 	
 	if not status then
 		return {error = {
@@ -276,7 +275,6 @@ api.upload_key = function(inp)
 	local response, request = {}, lbry.publish(inp)
 	request.sink = ltn12.sink.table(response)
 	http.request(request)
-	response = table.concat(response)
 
 	if response == "" then
 		return {error = {
@@ -286,7 +284,7 @@ api.upload_key = function(inp)
 		}
 	end
 	
-	status = pcall(function() response = json.decode(response) end)
+	status = pcall(function() response = json.decode(table.concat(response)) end)
 	
 	if not status then
 		return {error = {
@@ -313,10 +311,7 @@ api.get_lbryd_status = function(inp)
 	request.sink = ltn12.sink.table(response)
 	request.headers.TIMEOUT = inp.timeout
 	http.request(request)
-	response = table.concat(response)
 	
-	response = table.concat(response)
-
 	if response == "" then
 		return {error = {
 				code    = -32601,
@@ -325,7 +320,7 @@ api.get_lbryd_status = function(inp)
 		}
 	end
 	
-	status = pcall(function() response = json.decode(response) end)
+	status = pcall(function() response = json.decode(table.concat(response)) end)
 	
 	if not status then
 		return {error = {
