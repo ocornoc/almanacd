@@ -17,12 +17,12 @@ local bind_ip = "*"
 local bind_port = 5280
 
 ---- Version --------------------------------------------------
-local bibver = 20180822
+local bibver = 20180823
 
 ---- State ----------------------------------------------------
 local api = {}
-local files = require "lib.bibdir"
-local bibcrypt = require "lib.bibcrypt"
+local files = require "bibdir"
+local bibcrypt = require "bibcrypt"
 local log = assert(io.open(files.log_file_path, "w+"))
 local current_keys = {}
 
