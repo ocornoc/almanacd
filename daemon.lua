@@ -267,10 +267,11 @@ api.upload_key = function(inp)
 	temp_key_file:flush()
 	temp_key_file:close()
 	
+	inp.key = nil
 	inp.encryption_key = nil
 	inp.encryption_nonce = nil
 	
-	inp.content = files.scratchpad_file_path
+	inp.file_path = files.scratchpad_file_path
 	
 	local response, request = {}, lbry.publish(inp)
 	request.sink = ltn12.sink.table(response)
@@ -392,10 +393,11 @@ local function json_interface(json_inp)
 		}
 	end
 	
-	local result = api[inp.method:lower()](inp.params)
+	local result = api[inp.method:lower()](inp.params or {})
 	
 	if not inp.id then
 		log:write("[ " .. os.time() .. " ]\tStill no input ID\n")
+		
 		return
 	end
 	
