@@ -1,5 +1,5 @@
 ---- Dependencies ---------------------------------------------
-local json = require "cjson"
+local json = require "json"
 local ltn12 = require "ltn12"
 local mime = require "mime"
 local salut = require "salut"
@@ -23,7 +23,7 @@ function bibcrypt.construct.authregister(pubkey, aeskey, aesnonce)
 	
 	assert(err == nil or err == 0, "AES key hashing failed")
 	
-	local ciphertext, err = salut.encrypt.aes256gcm(pubkey, aeskey_hash, aesnonce, "bibliosoph10")
+	local ciphertext, err = salut.encrypt.aes256gcm(pubkey, aeskey_hash, aesnonce, "bibliosoph01")
 	
 	assert(err == nil or err == 0, "encryption failed")
 	
