@@ -94,7 +94,7 @@ function bibcrypt.deconstruct.authregister(authreg, aeskey, aesnonce)
 	
 	assert(err == nil or err == 0, "decryption failed")
 	
-	return json.decode(data)
+	return data
 end
 
 function bibcrypt.deconstruct.message(message, aeskey, aesnonce)
