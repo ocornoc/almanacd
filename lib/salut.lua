@@ -142,7 +142,7 @@ end
 -- Note: inputs are padded with trailing 0 bytes. key is truncated to 16 bytes and nonce to 12.
 -- Note 2: One of the "error" conditions (soft error) is if the args don't decrypt the ciphertext.
 function salut.decrypt.aes256gcm(ciphertext, key, nonce, add)
-	local output_m = ffi.new("unsigned char[?]", ciphertext:len() - 16, salut.pad.zero("", ciphertext:len() - 16))
+	local output_m = ffi.new("unsigned char[?]", ciphertext:len(), salut.pad.zero("", ciphertext:len()))
 	local output_mlen = ffi.new("unsigned long long[1]", {0})
 	local nsec = ffi.new("unsigned char *")
 	local input_c = ffi.new("const unsigned char[?]", ciphertext:len(), ciphertext)
