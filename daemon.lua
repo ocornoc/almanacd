@@ -7,7 +7,6 @@ local socket = require "socket"
 local json = require "json"
 local http = require "socket.http"
 local ltn12 = require "ltn12"
-local ffi = require "ffi"
 
 ---- Daemon Details -------------------------------------------
 -- Bind IP
