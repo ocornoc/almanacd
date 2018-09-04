@@ -421,6 +421,115 @@ api.upload_message = function(inp)
 	
 	return response
 end
+
+api.download_key = function(inp)
+	if type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	elseif type(inp.uri) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameters: 'uri' field must be a string",
+			}
+		}
+	end
+
+	local response, request = {}, lbry.stream_cost_estimate({uri = inp.uri})
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+	
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
+	local status = pcall(function() response = json.decode(table.concat(response)) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
+	
+	-- Check if the URI is resolvable.
+	if response.error then
+		return {error = response.error}
+	elseif not response.result then
+		return {error = {
+				code    = -32602,
+				message = "Could not resolve uri",
+			}
+		}
+	-- Check if the key isn't free but the caller isn't willing to pay.
+	elseif response.result > 0 and not inp.will_pay then
+		return {error = {
+				code    = -32602,
+				message = "Key has fee, set parameter 'will_pay' to 'true'",
+			}
+		}
+	end
+	
+	response, request = {}, lbry.get({uri = inp.uri})
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+	
+	status = pcall(function() response = json.decode(table.concat(response)) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
+	
+	-- Return error if there was one.
+	if response.error then
+		return {error = response.error}
+	end
+	
+	response = response.result
+	
+	file, err = io.open(response.download_path, "r")
+	
+	if not file or err then
+		return {error = {
+				code    = -32603,
+				message = "Could not open downloaded file at '" .. response.download_path .. "'",
+			}
+		}
+	end
+	
+	local message = file:read("*a")
+	file:close()
+	
+	local status, err = pcall(function() message = bibcrypt.deconstruct.message(message, inp.encryption_key, inp.encryption_nonce) end)
+	
+	if status then
+		return {result = message}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
 	local inp
