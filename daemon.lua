@@ -333,6 +333,94 @@ api.get_lbryd_status = function(inp)
 	return response
 end
 
+api.upload_message = function(inp)
+	if type(inp.message) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'message' field must be a string",
+			}
+		}
+	elseif type(inp.message_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'message_nonce' field must be a string",
+			}
+		}
+	elseif type(inp.last_message_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'last_message_nonce' field must be a string",
+			}
+		}
+	elseif type(inp.alias) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'alias' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_nonce' field must be a string",
+			}
+		}
+	end
+	
+	local message
+	local status, err = pcall(function() message = bibcrypt.construct.message(inp.message, inp.message_nonce, inp.last_message_nonce, inp.alias, inp.encryption_key, inp.encryption_nonce) end)
+	
+	if not status then
+		return {error = {
+				code    = -32602,
+				message = err
+			}
+		}
+	end
+	
+	local temp_key_file = io.open(files.scratchpad_file_path, "w+b")
+	temp_key_file:write(key)
+	temp_key_file:flush()
+	temp_key_file:close()
+	
+	inp.message = nil
+	inp.message_nonce = nil
+	inp.last_message_nonce = nil
+	inp.alias = nil
+	inp.encryption_key = nil
+	inp.encryption_nonce = nil
+	
+	inp.file_path = files.scratchpad_file_path
+	
+	local response, request = {}, lbry.publish(inp)
+	request.sink = ltn12.sink.table(response)
+	http.request(request)
+
+	if response == "" then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd returned nil, make sure it's running and responsive",
+			}
+		}
+	end
+	
+	status = pcall(function() response = json.decode(table.concat(response)) end)
+	
+	if not status then
+		return {error = {
+				code    = -32601,
+				message = "LBRYd failed to produce anything intelligible (aka json)",
+			}
+		}
+	end
+	
+	return response
+end
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
 	local inp
