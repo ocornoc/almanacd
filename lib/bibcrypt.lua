@@ -49,7 +49,7 @@ function bibcrypt.construct.message(message, message_nonce, last_message_nonce, 
 	local message_object = {
 		message = message,
 		alias = alias,
-		--time = os.time(os.date("!*t")),
+		time = os.time(os.date("!*t")),
 		message_hash = submessage_hash,
 		last_message_nonce = last_message_nonce,
 	}
