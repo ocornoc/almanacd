@@ -530,6 +530,47 @@ api.download_key = function(inp)
 	end
 end
 
+function api.verify_message(inp)
+	if type(inp.message_text) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'message_text' field must be a string",
+			}
+		}
+	elseif type(inp.encryption_key) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'encryption_key' field must be a string",
+			}
+		}
+	elseif type(inp.message_nonce) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'message_nonce' field must be a string",
+			}
+		}
+	elseif type(inp.message_hash) ~= "string" then
+		return {error = {
+				code    = -32602,
+				message = "Invalid parameter: 'message_hash' field must be a string",
+			}
+		}
+	end
+	
+	local verified
+	local status, err = pcall(function() verified = bibcrypt.verify.message(inp.message_text, inp.encryption_key, inp.message_nonce, inp.message_hash) end)
+	
+	if status then
+		return {result = verified}
+	else
+		return {error = {
+				code    = -32602,
+				message = err,
+			}
+		}
+	end
+end
+
 ---- Public Interface -----------------------------------------
 local function json_interface(json_inp)
 	local inp
