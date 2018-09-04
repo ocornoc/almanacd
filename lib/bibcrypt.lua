@@ -133,6 +133,23 @@ end
 
 ---- Object Verification --------------------------------------
 
+function bibcrypt.verify.message_hash(message_text, aeskey, message_nonce, test_hash)
+	assert(type(message_text) == "string", "'message_text' field must be a string (was a " .. type(message_text) .. ")")
+	assert(type(aeskey) == "string", "'aeskey' field must be a string (was a " .. type(aeskey) .. ")")
+	assert(type(message_nonce) == "string", "'message_nonce' field must be a string (was a " .. type(message_nonce) .. ")")
+	assert(type(test_hash) == "string", "'test_hash' field must be a string (was a " .. type(test_hash) .. ")")
+	
+	local aeskey_hash, err = salut.hash.sha512_256(aeskey)
+	
+	assert(err == nil or err == 0, "AES key hashing failed")
+	
+	local submessage_hash, err = salut.hash.sha512_256(message_text .. aeskey_hash .. message_nonce)
+	
+	assert(err == nil or err == 0, "message text hash failed")
+	
+	return submessage_hash == test_hash
+end
+
 ---------------------------------------------------------------
 
 return bibcrypt
